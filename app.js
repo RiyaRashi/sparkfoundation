@@ -6,10 +6,17 @@ const config = require("./Paytm/config");
 const PDFDocument=require('pdfkit');
 const path=require('path');
 const fs=require('fs');
+const nodemailer = require('nodemailer');
+const sendgridTransport = require('nodemailer-sendgrid-transport');
+const transporter = nodemailer.createTransport(sendgridTransport({
+  auth: {
 
+    api_key: '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'
+  }
+}));
 var invoice;
 var custid;
-
+var email;
 const app = express();
 const parseUrl = express.urlencoded({ extended: false });
 const parseJson = express.json({ extended: false });
@@ -40,7 +47,7 @@ res.setHeader('Content-Type', 'application/pdf');
 pdfDoc.pipe(fs.createWriteStream(invoicePath));
 pdfDoc.pipe(res);
 
-pdfDoc.fontSize(22).text('Invoice',{
+pdfDoc.fontSize(25).text('Invoice',{
   underline:true,
   align:'center'
 });
@@ -48,16 +55,21 @@ pdfDoc.text('--------------------',{
   align:'center'
 }); 
 pdfDoc
-    .fontSize(10)
+    .fontSize(20)
     .text(
-      "your payment is successful",
+      "Congratulations!!",
+ 
+      { align: "center",margin:50}
+    );
+    pdfDoc
+    .fontSize(15)
+    .text(
+      " Your payment is successful",
  
       { align: "center",margin:50}
     );
    
-    pdfDoc.text('--------------------',{
-      align:'center'
-    }); 
+   
 pdfDoc.fontSize(20).text(' Your total amount is :Rs.'+invoice,{
   align:'center',
   margin: 50 
@@ -87,6 +99,7 @@ app.post("/paynow", [parseUrl, parseJson], (req, res) => {
   }
   invoice=paymentDetails.amount;
   custid=paymentDetails.customerId;
+  email=paymentDetails.customerEmail;
  console.log(paymentDetails.amount);
 
   if (!paymentDetails.amount || !paymentDetails.customerId || !paymentDetails.customerEmail || !paymentDetails.customerPhone) {
@@ -180,6 +193,12 @@ app.post("/callback", (req, res) => {
           var _result = JSON.parse(response);
           if (_result.STATUS == 'TXN_SUCCESS') {
             res.sendFile(__dirname + "/success.html");
+            return transporter.sendMail({
+              to: email,
+              from: 'riya.rashi141@gmail.com',
+              subject: 'Payment done successfully',
+              html: '<h1>Thank You for  your contribution. </h1><p>Click on<a href="http://localhost:3000/invoice">invoice</a>to get the invoice</p>'
+            });
           } else {
             res.sendFile(__dirname + "/fail.html");
           }
