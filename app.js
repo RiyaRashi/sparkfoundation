@@ -3,7 +3,19 @@ const https = require("https");
 const qs = require("querystring");
 const checksum_lib = require("./Paytm/checksum");
 const config = require("./Paytm/config");
+const PDFDocument=require('pdfkit');
+const path=require('path');
+const fs=require('fs');
+const nodemailer = require('nodemailer');
+const sendgridTransport = require('nodemailer-sendgrid-transport');
+var invoice;
+var custid;
+const transporter = nodemailer.createTransport(sendgridTransport({
+  auth: {
 
+    api_key: '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'
+  }
+}));
 const app = express();
 const parseUrl = express.urlencoded({ extended: false });
 const parseJson = express.json({ extended: false });
@@ -20,6 +32,61 @@ app.post('/start', (req, res) => {
 app.post('/payment', (req, res) => {
   res.sendFile(__dirname + "/index.html");
 })
+app.get('/invoice',(req,res,next)=>{
+  // var paymentDetails = {
+  //   amount: req.params.amount,
+  //   customerId: req.params.name,
+  //   customerEmail: req.params.email,
+  //   customerPhone: req.params.phone
+  // }
+
+  const invoiceName = 'invoice-' + custid+ '.pdf';
+  const invoicePath = path.join('data', 'invoices', invoiceName);
+  const pdfDoc= new PDFDocument({ margin: 50 });
+res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader(
+          'Content-Disposition',
+          'attachment; filename="' + invoiceName + '"'
+        );
+pdfDoc.pipe(fs.createWriteStream(invoicePath));
+pdfDoc.pipe(res);
+
+pdfDoc.fontSize(22).text('Invoice',{
+  underline:true,
+  align:'center'
+});
+pdfDoc.text('--------------------',{
+  align:'center'
+}); 
+pdfDoc
+    .fontSize(10)
+    .text(
+      "your payment is successful",
+ 
+      { align: "center",margin:50}
+    );
+   
+    pdfDoc.text('--------------------',{
+      align:'center'
+    }); 
+pdfDoc.fontSize(20).text(' Your total amount is :Rs.'+invoice,{
+  align:'center',
+  margin: 50 
+});
+pdfDoc.text('--------------------',{
+  align:'center'
+}); 
+pdfDoc
+.fontSize(10)
+.text(
+  "Thank You",
+  { align: "center" ,
+  margin: 50 }
+);
+pdfDoc.end();
+     
+
+});
 app.post("/paynow", [parseUrl, parseJson], (req, res) => {
   // Route for making payment
 
@@ -29,6 +96,10 @@ app.post("/paynow", [parseUrl, parseJson], (req, res) => {
     customerEmail: req.body.email,
     customerPhone: req.body.phone
   }
+  invoice=paymentDetails.amount;
+  custid=paymentDetails.customerId;
+ console.log(paymentDetails.amount);
+
   if (!paymentDetails.amount || !paymentDetails.customerId || !paymentDetails.customerEmail || !paymentDetails.customerPhone) {
     res.status(400).sendFile(__dirname + "/fail.html");
   } else {
