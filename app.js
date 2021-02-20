@@ -12,6 +12,9 @@ app.use(express.static(__dirname + '/public'));
 const PORT = process.env.PORT || 3000;
 
 app.get("/", (req, res) => {
+  res.sendFile(__dirname + "/intro.html");
+});
+app.post('/start', (req, res) => {
   res.sendFile(__dirname + "/first.html");
 });
 app.post('/payment', (req, res) => {
