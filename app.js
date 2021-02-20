@@ -6,16 +6,10 @@ const config = require("./Paytm/config");
 const PDFDocument=require('pdfkit');
 const path=require('path');
 const fs=require('fs');
-const nodemailer = require('nodemailer');
-const sendgridTransport = require('nodemailer-sendgrid-transport');
+
 var invoice;
 var custid;
-const transporter = nodemailer.createTransport(sendgridTransport({
-  auth: {
 
-    api_key: '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'
-  }
-}));
 const app = express();
 const parseUrl = express.urlencoded({ extended: false });
 const parseJson = express.json({ extended: false });
@@ -33,12 +27,7 @@ app.post('/payment', (req, res) => {
   res.sendFile(__dirname + "/index.html");
 })
 app.get('/invoice',(req,res,next)=>{
-  // var paymentDetails = {
-  //   amount: req.params.amount,
-  //   customerId: req.params.name,
-  //   customerEmail: req.params.email,
-  //   customerPhone: req.params.phone
-  // }
+ 
 
   const invoiceName = 'invoice-' + custid+ '.pdf';
   const invoicePath = path.join('data', 'invoices', invoiceName);
